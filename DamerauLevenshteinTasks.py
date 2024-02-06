@@ -1,4 +1,5 @@
 import csv
+import subprocess
 
 def damerau_levenshtein_distance(A, B):
     N, M = len(A), len(B)
@@ -17,7 +18,7 @@ def damerau_levenshtein_distance(A, B):
                 dp[i][j] = 1 + min(
                     dp[i - 1][j],      # Insertion
                     dp[i][j - 1],      # Deletion
-                    dp[i - 1][j - 1]    # Replacement
+                    dp[i - 1][j - 1]   # Replacement
                 )
 
                 if i > 1 and j > 1 and A[i - 1] == B[j - 2] and A[i - 2] == B[j - 1]:
@@ -25,9 +26,13 @@ def damerau_levenshtein_distance(A, B):
 
     return dp[N][M]
 
+# Save a list of current running tasks on the Windows system as a CSV file.
+with open("Tasks.csv", "w") as output_file:
+    subprocess.run(["tasklist", "/FO", "CSV", "/NH"], stdout=output_file)
+
 if __name__ == '__main__':
     try:
-        # Hardcoded list of good tasks
+        # List of good tasks
         good_processes = [
             "System Idle Process",
             "System",
@@ -171,14 +176,15 @@ if __name__ == '__main__':
             # Read the first two columns from the CSV file
             lines_B = [(row[0], row[1]) for row in csv_reader]
         
+        sus_procs = 0
+
         with open('StealthyTasks.txt', 'w', encoding='utf-8') as output_file:
-            sus_procs = 0
             for A in good_processes:
                 for B in lines_B:
                     distance = damerau_levenshtein_distance(A, B[0])  # Comparing with the first column
                     if distance == 1 and B[0] not in good_processes:
-                        susProcs =+ 1
-                        output_file.write(f"Stealthy suspicious process similar to {A} : {B[0]}            PID: {B[1]}\n")
+                        sus_procs =+ 1
+                        output_file.write(f"Stealthy task similar to {A} : {B[0]}            PID: {B[1]}\n")
             if sus_procs == 0:
                 output_file.write("No stealthy tasks were found running on this system.")        
         
